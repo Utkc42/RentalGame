@@ -1,0 +1,14 @@
+{
+  "consoleTypes": [
+    "PlayStation 1",
+    "PlayStation 2",
+    "PlayStation 3",
+    "PlayStation 4",
+    "PlayStation 5",
+    "Xbox",
+    "Nintendo Switch",
+    "PC",
+    "Gameboy",
+    "Other"
+  ]
+}

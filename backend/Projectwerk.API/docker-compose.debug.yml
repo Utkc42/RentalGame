@@ -1,0 +1,15 @@
+version: '3.4'
+
+services:
+  webapp:
+    image: mcr.microsoft.com/dotnet/samples:aspnetapp
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=https://localhost:8443
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=alm3ndr1tsadriu
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=./aspnethttpsIdentityServer.pfx
+    volumes:
+      - ~/.aspnet/https:/https:ro
+      - ./Projectwerk.API/certificates:/app/Projectwerk.API/certificates:ro
