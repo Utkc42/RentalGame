@@ -1,6 +1,6 @@
-using Projectwerk.Infrastructure.Models;
 using Microsoft.EntityFrameworkCore;
 using Projectwerk.Infrastructure.Data;
+using Projectwerk.Infrastructure.Models;
 
 namespace Projectwerk.Infrastructure.Repositories;
 
@@ -10,6 +10,7 @@ public class UserRepository
     {
         _dbContext = dbContext;
     }
+
     private readonly RetroDbContext _dbContext;
 
     public async Task<IEnumerable<User>> GetAll()
@@ -20,6 +21,16 @@ public class UserRepository
     public async Task<User> GetById(int id)
     {
         return await _dbContext.Users.FirstOrDefaultAsync(u => u.UserId == id);
+    }
+
+    public async Task<User> GetByEmail(string email)
+    {
+        return await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
+    }
+
+    public async Task<User> GetByPhoneNumber(string phoneNumber)
+    {
+        return await _dbContext.Users.FirstOrDefaultAsync(u => u.PhoneNumber == phoneNumber);
     }
 
     public async Task<User> Create(User entity)
@@ -51,21 +62,14 @@ public class UserRepository
         var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
 
         if (user == null)
-        {
             // User with provided email doesn't exist
             return null;
-        }
 
         // Verify the password using BCrypt
         if (BCrypt.Net.BCrypt.Verify(password, user.Password))
-        {
             // Password matches, return the user
             return user;
-        }
-        else
-        {
-            // Password doesn't match
-            return null;
-        }
+        // Password doesn't match
+        return null;
     }
 }

@@ -18,7 +18,7 @@ public class GameController : ControllerBase
     private readonly GameRepository _gameRepository;
     private readonly IMapper _mapper;
 
-    public GameController(ILogger<GameController> logger, GameRepository gameRepository,IMapper mapper)
+    public GameController(ILogger<GameController> logger, GameRepository gameRepository, IMapper mapper)
     {
         _logger = logger;
         _gameRepository = gameRepository;
@@ -32,37 +32,28 @@ public class GameController : ControllerBase
 
         // Filter out deleted games
         var activeGames = games.Where(game => !game.IsDeleted).ToList();
-        if (activeGames.Count == 0)
-        {
-            return NoContent();
-        }
+        if (activeGames.Count == 0) return NoContent();
 
         var json = JsonConvert.SerializeObject(activeGames, Formatting.Indented);
 
         return Ok(json);
     }
-    
+
     [HttpGet("all")]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> GetGames()
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (userIdClaim == null)
-        {
-            return Unauthorized("No user ID claim present in token.");
-        }
-    
+        if (userIdClaim == null) return Unauthorized("No user ID claim present in token.");
+
         var games = await _gameRepository.GetAll();
 
-        if (!games.Any())
-        {
-            return NoContent();
-        }
+        if (!games.Any()) return NoContent();
 
         var json = JsonConvert.SerializeObject(games, Formatting.Indented);
         return Ok(json);
     }
-    
+
     // GET: api/games/{id}
     [HttpGet("{id}")]
     public async Task<IActionResult> GetGameById(int id)

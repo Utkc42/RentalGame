@@ -1,44 +1,41 @@
-﻿using System.Reflection;
+﻿using System.Linq.Dynamic.Core;
+using System.Reflection;
 using System.Text;
-using System.Linq.Dynamic.Core;
 
-namespace Projectwerk.Domain.Helpers
+namespace Projectwerk.Domain.Helpers;
+
+public class SortHelper<T> : ISortHelper<T>
 {
-    public class SortHelper<T> : ISortHelper<T>
+    public IQueryable<T> ApplySort(ref IQueryable<T> entities, string orderByQueryString)
     {
-        public IQueryable<T> ApplySort(ref IQueryable<T> entities, string orderByQueryString)
+        if (!entities.Any())
+            return entities;
+
+        if (string.IsNullOrWhiteSpace(orderByQueryString)) return entities;
+
+        var orderParams = orderByQueryString.Trim().Split(',');
+        var propertyInfos = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+        var orderQueryBuilder = new StringBuilder();
+
+        foreach (var param in orderParams)
         {
-            if (!entities.Any())
-                return entities;
+            if (string.IsNullOrWhiteSpace(param))
+                continue;
 
-            if (string.IsNullOrWhiteSpace(orderByQueryString))
-            {
-                return entities;
-            }
+            var propertyFromQueryName = param.Split(" ")[0];
+            var objectProperty = propertyInfos.FirstOrDefault(pi =>
+                pi.Name.Equals(propertyFromQueryName, StringComparison.InvariantCultureIgnoreCase));
 
-            var orderParams = orderByQueryString.Trim().Split(',');
-            var propertyInfos = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            var orderQueryBuilder = new StringBuilder();
+            if (objectProperty == null)
+                continue;
 
-            foreach (var param in orderParams)
-            {
-                if (string.IsNullOrWhiteSpace(param))
-                    continue;
+            var sortingOrder = param.EndsWith(" desc") ? "descending" : "ascending";
 
-                var propertyFromQueryName = param.Split(" ")[0];
-                var objectProperty = propertyInfos.FirstOrDefault(pi => pi.Name.Equals(propertyFromQueryName, StringComparison.InvariantCultureIgnoreCase));
-
-                if (objectProperty == null)
-                    continue;
-
-                var sortingOrder = param.EndsWith(" desc") ? "descending" : "ascending";
-
-                orderQueryBuilder.Append($"{objectProperty.Name.ToString()} {sortingOrder}, ");
-            }
-
-            var orderQuery = orderQueryBuilder.ToString().TrimEnd(',', ' ');
-
-            return entities.OrderBy(orderQuery);
+            orderQueryBuilder.Append($"{objectProperty.Name} {sortingOrder}, ");
         }
+
+        var orderQuery = orderQueryBuilder.ToString().TrimEnd(',', ' ');
+
+        return entities.OrderBy(orderQuery);
     }
 }

@@ -49,7 +49,7 @@ const Home = () => {
     <div className="p-2 relative">
       <HeroSection />
       <Filter games={games} setFilteredGames={setFilteredGames} />
-      <div className="pt-4 grid gap-4 lg:grid-cols-5 md:grid-cols-4 sm:grid-cols-3">
+      <div className="pt-4 grid gap-4 lg:grid-cols-6 md:grid-cols-4 sm:grid-cols-3">
         {filteredGames.length > 0 ? (
           filteredGames.map((game) => (
             <GameCard key={game.gameId} game={game} />

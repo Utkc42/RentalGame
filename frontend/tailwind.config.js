@@ -9,22 +9,21 @@ export default {
   theme: {
     extend: {
       colors: {
-        neonGreen: "#2ECC40",
-        retroRed: "#7D0A0A",
-        retroLightRed: "#BF3131",
-        retroRedLight: "#D45456",
-        coolBlue: "#376EA7",
-        lightBlue: "#ADC7DF",
         retroblue: "#567bff",
         retrored: "#ff6f61",
         darkblue: "#001F3F",
         electricBlue: "#7FDBFF",
         brightRed: "#FF4136",
         retroAccent: "#ffcc00",
+        lightGray: "#D3D3D3",
+        darkGray: "#243B52",
       },
       fontFamily: {
         retro: ['"Press Start 2P"', "system-ui"],
         metro: ['"VT323"', "system-ui"],
+        honk: ['"Honk"', "system-ui"],
+        Acme: ['"Acme"', "system-ui"],
+        Archivo: ['"Archivo Black"', "system-ui"],
       },
       keyframes: {
         bounce: {

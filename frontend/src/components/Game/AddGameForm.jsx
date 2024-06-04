@@ -1,5 +1,5 @@
 import { Controller, useForm } from "react-hook-form";
-import { /* useEffect, */ useState } from "react";
+import { useState } from "react";
 import Select from "react-select";
 import { consoleTypes } from "../../assets/consoleTypes.json";
 import { useUser } from "../../context/UserContext";
@@ -40,7 +40,7 @@ const AddGameForm = () => {
     data.isDeleted = false;
     try {
       const postUrl = import.meta.env.VITE_BACKEND_URL + "/api/games";
-      const response = await fetch(postUrl, {
+      await fetch(postUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -48,8 +48,6 @@ const AddGameForm = () => {
         },
         body: JSON.stringify(data),
       });
-      const responseData = await response.json();
-      console.log("responseData: ", responseData);
       window.location.reload();
     } catch (error) {
       console.error(error);

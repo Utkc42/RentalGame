@@ -1,29 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace Projectwerk.Domain.Helpers;
 
-namespace Projectwerk.Domain.Helpers
+internal class QueryStringParameters
 {
-    internal class QueryStringParameters
+    private const int _maxPageSize = 10;
+    public int PageNumber { get; set; } = 1;
+
+    private int _pageSize = 10;
+
+    public int PageSize
     {
-        const int _maxPageSize = 10;
-        public int PageNumber { get; set; } = 1;
-
-        private int _pageSize = 10;
-        public int PageSize
-        {
-            get
-            {
-                return _pageSize;
-            }
-            set
-            {
-                _pageSize = value > _maxPageSize ? _maxPageSize : value;
-            }
-        }
-
-        public string? OrderBy { get; set; }
+        get => _pageSize;
+        set => _pageSize = value > _maxPageSize ? _maxPageSize : value;
     }
+
+    public string? OrderBy { get; set; }
 }

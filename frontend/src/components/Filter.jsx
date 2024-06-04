@@ -44,8 +44,8 @@ const Filter = ({ games, setFilteredGames }) => {
   };
 
   return (
-    <div className="mt-2 font-metro">
-      <div className="mb-4 flex items-center">
+    <div className="mt-6">
+      <div className="mb-2 flex items-center">
         <input
           type="text"
           placeholder="Search games..."
@@ -55,7 +55,7 @@ const Filter = ({ games, setFilteredGames }) => {
         />
         <button
           onClick={() => setShowFilterModal(true)}
-          className="bg-electricBlue hover:bg-retroRed text-white font-bold py-2 px-5 rounded text-lg"
+          className="bg-green-500 hover:bg-green-700 font-metro text-white py-2 px-5 rounded text-2xl"
         >
           Filter
         </button>
@@ -65,11 +65,9 @@ const Filter = ({ games, setFilteredGames }) => {
           <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-gray-100">
             <h3 className="text-2xl font-bold">Select Filters</h3>
             <div className="my-4">
-              <label className="block text-xl font-medium text-gray-800">
-                Name:
-              </label>
+              <label className="block text-lg font-medium">Name</label>
               <select
-                className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-lg"
+                className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 value={filters.name}
                 onChange={(e) => updateFilter("name", e.target.value)}
               >
@@ -85,11 +83,9 @@ const Filter = ({ games, setFilteredGames }) => {
             </div>
 
             <div className="my-4">
-              <label className="block text-xl font-medium text-gray-800">
-                Release Year:
-              </label>
+              <label className="block text-lg font-medium">Release Year</label>
               <select
-                className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-lg"
+                className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 value={filters.releaseYear}
                 onChange={(e) => updateFilter("releaseYear", e.target.value)}
               >
@@ -105,11 +101,9 @@ const Filter = ({ games, setFilteredGames }) => {
             </div>
 
             <div className="my-4">
-              <label className="block text-xl font-medium text-gray-800">
-                Publisher:
-              </label>
+              <label className="block text-lg font-medium">Publisher</label>
               <select
-                className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-lg"
+                className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 value={filters.publisher}
                 onChange={(e) => updateFilter("publisher", e.target.value)}
               >
@@ -125,11 +119,9 @@ const Filter = ({ games, setFilteredGames }) => {
             </div>
 
             <div className="my-4">
-              <label className="block text-xl font-medium text-gray-800">
-                Category:
-              </label>
+              <label className="block text-lg font-medium">Category</label>
               <select
-                className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-lg"
+                className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 value={filters.category}
                 onChange={(e) => updateFilter("category", e.target.value)}
               >
@@ -147,13 +139,13 @@ const Filter = ({ games, setFilteredGames }) => {
             <div className="flex justify-between mt-4">
               <button
                 onClick={resetFilters}
-                className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-lg"
+                className="bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded"
               >
                 Reset
               </button>
               <button
                 onClick={closeFilters}
-                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-lg"
+                className="bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded"
               >
                 Close
               </button>

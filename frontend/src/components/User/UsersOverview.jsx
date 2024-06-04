@@ -53,7 +53,7 @@ const UsersOverview = () => {
 
   const deleteUser = async () => {
     try {
-      const response = await axios.delete(
+      await axios.delete(
         `${import.meta.env.VITE_BACKEND_URL}/api/users/${userToDelete}`,
         {
           headers: {
@@ -61,7 +61,6 @@ const UsersOverview = () => {
           },
         }
       );
-      console.log("User deleted successfully:", response.data);
       window.location.reload();
     } catch (error) {
       console.error("Error deleting user:", error);
@@ -124,7 +123,7 @@ const UsersOverview = () => {
               <p>No users found.</p>
             ) : (
               <table className="w-full text-sm text-left">
-                <thead className="text-xs uppercase bg-white text-black">
+                <thead className="text-xs uppercase text-black">
                   <tr>
                     <th
                       scope="col"
@@ -169,7 +168,7 @@ const UsersOverview = () => {
                       className="pl-2 cursor-pointer"
                       onClick={() => handleSort("LateReturnCount")}
                     >
-                      Late Return Count
+                      LRC
                     </th>
                     <th scope="col" className="pl-2">
                       Active
@@ -184,7 +183,7 @@ const UsersOverview = () => {
                     <tr
                       onClick={handleClickUser}
                       key={user.id}
-                      className="border-b h-10 bg-white text-black border-gray-700 hover:bg-gray-600"
+                      className="border-b h-10 text-black border-gray-700 hover:bg-gray-600 hover:text-white"
                     >
                       <td name="firstName" className="pl-2">
                         {user.FirstName}

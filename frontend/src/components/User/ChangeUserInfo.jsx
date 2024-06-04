@@ -8,7 +8,7 @@ import { faWrench } from "@fortawesome/free-solid-svg-icons";
 const ChangeUserInfo = ({ user }) => {
   const iconStyle = "text-white pr-2";
   const changeLabelStyle =
-    "block uppercase tracking-wide text-white text-xs font-bold mb-2";
+    "block uppercase tracking-wide text-black text-xs font-bold mb-2";
   const inputStyle =
     "block w-full bg-gray-200 border border-gray-200 rounded py-2 px-3 leading-tight focus:outline-none focus:bg-white mb-4 text-black";
 
@@ -34,7 +34,7 @@ const ChangeUserInfo = ({ user }) => {
     const error = validatePassword(password);
     setPasswordError(error);
     try {
-      const submitResponse = await axios.put(
+      await axios.put(
         `${import.meta.env.VITE_BACKEND_URL}/api/users/${user.UserId}`,
         {
           ...formData,
@@ -47,13 +47,10 @@ const ChangeUserInfo = ({ user }) => {
           },
         }
       );
-      console.log("Response:", submitResponse);
-      console.log("User data updated successfully!");
       alert("User data updated.");
       togglePop();
-      navigate("/login");
+      navigate("/auth");
     } catch (error) {
-      console.error("Error updating user data:", error);
       alert("Error updating user data.");
     }
   };
@@ -85,7 +82,7 @@ const ChangeUserInfo = ({ user }) => {
     <div className="flex justify-end text-white">
       <button
         onClick={togglePop}
-        className="bg-darkblue hover:bg-sky-600 font-bold py-2 px-3 rounded"
+        className="bg-darkGray hover:bg-sky-600 font-bold py-2 px-3 rounded"
       >
         <FontAwesomeIcon icon={faWrench} className={iconStyle} />
         Change Info
@@ -94,96 +91,102 @@ const ChangeUserInfo = ({ user }) => {
         <div className="fixed inset-0 bg-gray-500 bg-opacity-50 overflow-y-auto h-full w-full z-50">
           <form
             onSubmit={handleSubmit}
-            className="relative top-20 m-auto gap-3 justify-center bg-gray-800 p-5 rounded-lg w-96 shadow-lg"
+            className="relative top-20 m-auto gap-3 justify-center bg-white border-2 border-white rounded-lg max-w-screen-sm shadow-lg"
           >
-            <h2 className="text-xl font-bold text-center mb-4">Change Info</h2>
-            <div>
-              <label className={changeLabelStyle} htmlFor="firstName">
-                First Name:
-              </label>
-              <input
-                className={inputStyle}
-                type="text"
-                name="firstName"
-                placeholder="Firstname"
-                value={formData.firstName}
-                onChange={handleInputChange}
-                required
-              />
+            <div className="p-4 bg-darkGray rounded-t-lg">
+              <h2 className="text-xl font-bold text-center">
+                Change Account Information
+              </h2>
             </div>
-            <div>
-              <label className={changeLabelStyle} htmlFor="lastName">
-                Last Name:
-              </label>
-              <input
-                className={inputStyle}
-                type="text"
-                name="lastName"
-                placeholder="Lastname"
-                value={formData.lastName}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div>
-              <label className={changeLabelStyle} htmlFor="email">
-                Email:
-              </label>
-              <input
-                className={inputStyle}
-                type="email"
-                name="email"
-                placeholder="Email"
-                value={formData.email}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div>
-              <label className={changeLabelStyle} htmlFor="password">
-                Password:
-              </label>
-              <input
-                className={inputStyle}
-                type="password"
-                name="password"
-                placeholder="Password"
-                value={password}
-                onChange={handlePasswordChange}
-                minLength={6}
-                required
-              />
-              {passwordError && (
-                <p className="text-red-400 mb-3">{passwordError}</p>
-              )}
-            </div>
-            <div>
-              <label className={changeLabelStyle} htmlFor="phoneNumber">
-                Phone Number:
-              </label>
-              <input
-                className={inputStyle}
-                type="tel"
-                name="phoneNumber"
-                placeholder={user.PhoneNumber}
-                value={formData.phoneNumber}
-                onChange={handleInputChange}
-                maxLength={13}
-                required
-              />
-            </div>
-            <div className="flex flex-row justify-between text-white font-bold">
-              <button
-                onClick={togglePop}
-                className="bg-gray-500 hover:bg-gray-600 py-2 px-4 rounded"
-              >
-                Cancel
-              </button>
-              <input
-                type="submit"
-                value="Submit changes"
-                className="bg-sky-600 hover:bg-sky-700 py-2 px-4 rounded"
-              />
+            <div className="p-5  rounded-b-lg">
+              <div>
+                <label className={changeLabelStyle} htmlFor="firstName">
+                  First Name:
+                </label>
+                <input
+                  className={inputStyle}
+                  type="text"
+                  name="firstName"
+                  placeholder="Firstname"
+                  value={formData.firstName}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div>
+                <label className={changeLabelStyle} htmlFor="lastName">
+                  Last Name:
+                </label>
+                <input
+                  className={inputStyle}
+                  type="text"
+                  name="lastName"
+                  placeholder="Lastname"
+                  value={formData.lastName}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div>
+                <label className={changeLabelStyle} htmlFor="email">
+                  Email:
+                </label>
+                <input
+                  className={inputStyle}
+                  type="email"
+                  name="email"
+                  placeholder="Email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div>
+                <label className={changeLabelStyle} htmlFor="password">
+                  Password:
+                </label>
+                <input
+                  className={inputStyle}
+                  type="password"
+                  name="password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={handlePasswordChange}
+                  minLength={6}
+                  required
+                />
+                {passwordError && (
+                  <p className="text-red-400 mb-3">{passwordError}</p>
+                )}
+              </div>
+              <div>
+                <label className={changeLabelStyle} htmlFor="phoneNumber">
+                  Phone Number:
+                </label>
+                <input
+                  className={inputStyle}
+                  type="tel"
+                  name="phoneNumber"
+                  placeholder={user.PhoneNumber}
+                  value={formData.phoneNumber}
+                  onChange={handleInputChange}
+                  maxLength={13}
+                  required
+                />
+              </div>
+              <div className="flex flex-row justify-between text-white font-bold">
+                <button
+                  onClick={togglePop}
+                  className="bg-slate-500 hover:bg-slate-700 py-2 px-4 rounded"
+                >
+                  Cancel
+                </button>
+                <input
+                  type="submit"
+                  value="Submit changes"
+                  className="bg-sky-600 hover:bg-sky-800 py-2 px-4 rounded"
+                />
+              </div>
             </div>
           </form>
         </div>

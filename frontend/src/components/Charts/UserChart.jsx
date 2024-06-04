@@ -3,31 +3,25 @@ import { FaUser } from "react-icons/fa";
 import Chart from "chart.js/auto"; // Import Chart.js library
 
 const UserChart = () => {
-  // State variables to store dynamic data
-  const [totalUsers, setTotalUsers] = useState("32.4k");
-  const [userGrowth, setUserGrowth] = useState("12%");
-  const chartRef = useRef(null); // Ref for the chart instance
+  const [totalUsers, setTotalUsers] = useState(2400);
+  const [userGrowth, setUserGrowth] = useState(12);
+  const chartRef = useRef(null);
 
-  // Simulated fetch function to get user data
   const fetchUserData = () => {
-    // Simulating API call delay
+    // Simulate data fetching
     setTimeout(() => {
-      setTotalUsers("2.4k"); // Replace with dynamic data from API
-      setUserGrowth("12%"); // Replace with dynamic data from API
-    }, 1000); // Simulated delay of 1 second
+      setTotalUsers(2400);
+      setUserGrowth(12);
+    }, 1000);
   };
 
-  // Create or update the chart when user data changes
   useEffect(() => {
-    // Ensure chartRef has been initialized and totalUsers is not empty
     if (chartRef.current && totalUsers) {
       const ctx = chartRef.current.getContext("2d");
       let myChart = chartRef.current.myChart;
-      // Destroy existing chart instance if it exists
       if (myChart) {
         myChart.destroy();
       }
-      // Create new chart instance
       chartRef.current.myChart = new Chart(ctx, {
         type: "bar",
         data: {
@@ -36,98 +30,97 @@ const UserChart = () => {
             {
               label: "User Data",
               data: [totalUsers, userGrowth],
-              backgroundColor: ["rgba(255, 99, 132, 0.2)", "rgba(54, 162, 235, 0.2)"],
-              borderColor: ["rgba(255, 99, 132, 1)", "rgba(54, 162, 235, 1)"],
-              borderWidth: 1,
+              backgroundColor: ["#4CAF50", "#FFC107"], // Green and yellow colors
+              borderColor: ["#fff", "#fff"],
+              borderWidth: 2,
+              borderRadius: 5,
             },
           ],
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false,
+            },
+            tooltip: {
+              enabled: true,
+              backgroundColor: "#333",
+              titleFont: { family: "Arial", size: 14, weight: "bold" },
+              bodyFont: { family: "Arial", size: 12 },
+              bodyColor: "#fff",
+              borderColor: "#fff",
+              borderWidth: 1,
+            },
+          },
+          animation: {
+            duration: 1500,
+            easing: "easeInOutBounce",
+          },
+          scales: {
+            x: {
+              grid: {
+                color: "rgba(0, 0, 0, 0.1)",
+              },
+              ticks: {
+                color: "#333",
+                font: {
+                  family: "Arial",
+                  size: 14,
+                },
+              },
+            },
+            y: {
+              grid: {
+                color: "rgba(0, 0, 0, 0.1)",
+              },
+              ticks: {
+                color: "#333",
+                font: {
+                  family: "Arial",
+                  size: 14,
+                },
+                beginAtZero: true,
+              },
+            },
+          },
         },
       });
     }
   }, [totalUsers, userGrowth]);
 
-  // Fetch user data when the component mounts
   useEffect(() => {
     fetchUserData();
   }, []);
 
   return (
-    <div className="max-w-sm w-full bg-white rounded-lg shadow dark:bg-gray-800 p-4 md:p-6">
-      <div className="flex justify-between">
+    <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6">
+      <div className="flex justify-between items-center">
         <div>
-          <h5 className="leading-none text-3xl font-bold text-gray-900 dark:text-white pb-2">
-            {totalUsers}
+          <h5 className="leading-none text-4xl font-bold text-gray-900 pb-2">
+            {totalUsers.toLocaleString()}
           </h5>
-          <p className="text-base font-normal text-gray-500 dark:text-gray-400">
-            Users this week
-          </p>
+          <p className="text-base font-normal text-gray-500">Users this week</p>
         </div>
-        <div className="flex items-center px-2.5 py-0.5 text-base font-semibold text-green-500 dark:text-green-500 text-center">
-          {userGrowth}
-          <svg
-            className="w-3 h-3 ms-1"
-            aria-hidden="true"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 10 14">
-            <path
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M5 13V1m0 0L1 5m4-4 4 4"
-            />
-          </svg>
+        <div className="flex items-center px-2.5 py-0.5 text-base font-semibold text-green-500">
+          {userGrowth}%
+          <FaUser className="ml-1 text-lg text-gray-600" />
         </div>
       </div>
       <div className="flex justify-center py-6">
-        <FaUser className="text-6xl text-gray-900 dark:text-white" />
+        <canvas ref={chartRef}></canvas>
       </div>
-      <div className="grid grid-cols-1 items-center border-gray-200 border-t dark:border-gray-700 justify-between">
+      <div className="grid grid-cols-1 items-center border-t border-gray-200 justify-between">
         <div className="flex justify-between items-center pt-5">
-          <button
-            id="dropdownDefaultButton"
-            data-dropdown-toggle="lastDaysdropdown"
-            data-dropdown-placement="bottom"
-            className="text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 text-center inline-flex items-center dark:hover:text-white"
-            type="button"
-          >
+          <button className="text-sm font-medium text-gray-500 hover:text-gray-900 text-center inline-flex items-center">
             Last 7 days
-            <svg className="w-2.5 m-2.5 ms-1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
-              <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 4 4 4-4" />
-            </svg>
           </button>
-          <div id="lastDaysdropdown" className="z-10 hidden bg-white divide-y divide-gray-100 rounded-lg shadow w-44 dark:bg-gray-700">
-            <ul className="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownDefaultButton">
-              <li>
-                <a href="#" className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Yesterday</a>
-              </li>
-              <li>
-                <a href="#" className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Today</a>
-              </li>
-              <li>
-                <a href="#" className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Last 7 days</a>
-              </li>
-              <li>
-                <a href="#" className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Last 30 days</a>
-              </li>
-              <li>
-                <a href="#" className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Last 90 days</a>
-              </li>
-            </ul>
-          </div>
           <a
             href="#"
-            className="uppercase text-sm font-semibold inline-flex items-center rounded-lg text-blue-600 hover:text-blue-700 dark:hover:text-blue-500 hover:bg-gray-100 dark:hover:bg-gray-700 dark:focus:ring-gray-700 dark:border-gray-700 px-3 py-2"
+            className="uppercase text-sm font-semibold inline-flex items-center rounded-lg text-blue-600 hover:text-blue-700 px-3 py-2"
           >
             Users Report
-            <svg className="w-2.5 h-2.5 ms-1.5 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
-              <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 9 4-4-4-4" />
-            </svg>
           </a>
         </div>
       </div>

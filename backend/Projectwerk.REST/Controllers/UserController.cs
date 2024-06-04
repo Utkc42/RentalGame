@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,7 +9,6 @@ using Projectwerk.Infrastructure.Models;
 using Projectwerk.Infrastructure.Repositories;
 using Projectwerk.REST.DTO;
 using Projectwerk.REST.JWT;
-using System.Security.Claims;
 
 namespace Projectwerk.REST.Controllers;
 
@@ -38,7 +38,7 @@ public class UserController : ControllerBase
     public async Task<IActionResult> GetUsers([FromQuery] bool includeDeleted)
     {
         var users = await _userRepository.GetAll();
-        
+
         if (!includeDeleted)
             users = users.Where(user => !user.IsDeleted).ToList();
 
@@ -49,51 +49,48 @@ public class UserController : ControllerBase
         return Ok(json);
     }
 
-	// GET: api/users/{id}
-	[HttpGet("{id}")]
-	[Authorize]
-	public async Task<IActionResult> GetUserById(int id) {
-		// Get the user making the request
-		var requestingUserId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-		if (requestingUserId == null) {
-			// User not authenticated
-			return Unauthorized();
-		}
+    // GET: api/users/{id}
+    [HttpGet("{id}")]
+    [Authorize]
+    public async Task<IActionResult> GetUserById(int id)
+    {
+        // Get the user making the request
+        var requestingUserId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (requestingUserId == null)
+            // User not authenticated
+            return Unauthorized();
 
-		// Check if the requesting user is authorized to fetch the data
-		if (!(User.IsInRole("Admin") || User.IsInRole("admin")) && requestingUserId != id.ToString()) {
-			// Regular users can only fetch their own data
-			return Forbid();
-		}
+        // Check if the requesting user is authorized to fetch the data
+        if (!(User.IsInRole("Admin") || User.IsInRole("admin")) && requestingUserId != id.ToString())
+            // Regular users can only fetch their own data
+            return Forbid();
 
-		// Fetch the user data
-		var user = await _userRepository.GetById(id);
-		if (user == null || user.IsDeleted) {
-			return NotFound();
-		}
+        // Fetch the user data
+        var user = await _userRepository.GetById(id);
+        if (user == null || user.IsDeleted) return NotFound();
 
-		// Serialize user object to JSON
-		var json = JsonConvert.SerializeObject(user, Formatting.Indented);
-		return Ok(json);
-	}
+        // Serialize user object to JSON
+        var json = JsonConvert.SerializeObject(user, Formatting.Indented);
+        return Ok(json);
+    }
 
-	// PUT: api/users/{id}
-	[HttpPut("{id}")]
+    // PUT: api/users/{id}
+    [HttpPut("{id}")]
     [Authorize]
     public async Task<IActionResult> UpdateUser(int id, [FromBody] UserDTO? userDto)
     {
-		// Get the current user's claims
-		var currentUser = HttpContext.User;
+        // Get the current user's claims
+        var currentUser = HttpContext.User;
 
-		// Check if the current user is an admin
-		bool isAdmin = currentUser.IsInRole("admin") || currentUser.IsInRole("Admin");
+        // Check if the current user is an admin
+        var isAdmin = currentUser.IsInRole("admin") || currentUser.IsInRole("Admin");
 
-		// If the user is not an admin, ensure they can only update their own data
-		if (!isAdmin && id.ToString() != currentUser.FindFirstValue(ClaimTypes.NameIdentifier)) {
-			return Forbid(); // Return 403 Forbidden
-		}
+        // If the user is not an admin, ensure they can only update their own data
+        if (!isAdmin &&
+            id.ToString() !=
+            currentUser.FindFirstValue(ClaimTypes.NameIdentifier)) return Forbid(); // Return 403 Forbidden
 
-		if (userDto == null)
+        if (userDto == null)
         {
             _logger.LogError("User object sent from client is null.");
             return BadRequest("Invalid object.");
@@ -105,19 +102,17 @@ public class UserController : ControllerBase
             return BadRequest("Invalid object.");
         }
 
-        if (string.IsNullOrWhiteSpace(userDto.Role))
-        {
-            userDto.Role = "User";
-        }
-
         var existingUser = await _userRepository.GetById(id);
         if (existingUser == null)
             return NotFound();
 
-        // Map properties from DTO to existing user entity using AutoMapper
-        _mapper.Map(userDto, existingUser);
+        // Map properties from DTO to user, excluding Password
+        existingUser.FirstName = userDto.FirstName;
+        existingUser.LastName = userDto.LastName;
+        existingUser.Email = userDto.Email;
+        existingUser.PhoneNumber = userDto.PhoneNumber;
+        existingUser.Role = userDto.Role;
 
-        // Re-hash the password if it's provided in the DTO
         if (!string.IsNullOrWhiteSpace(userDto.Password))
         {
             var salt = BCrypt.Net.BCrypt.GenerateSalt(12);
@@ -133,7 +128,41 @@ public class UserController : ControllerBase
         return Ok("User successfully updated.");
     }
 
+    // PUT: api/users/{id}/account-balance
+    [HttpPut("{id}/account-balance")]
+    [Authorize]
+    public async Task<IActionResult> UpdateUserAccountBalance(int id)
+    {
+        // Get the current user's claims
+        var currentUser = HttpContext.User;
 
+        // Check if the current user is an admin
+        var isAdmin = currentUser.IsInRole("admin") || currentUser.IsInRole("Admin");
+
+        // If the user is not an admin, ensure they can only update their own data
+        if (!isAdmin &&
+            id.ToString() !=
+            currentUser.FindFirstValue(ClaimTypes.NameIdentifier)) return Forbid(); // Return 403 Forbidden
+
+        if (!ModelState.IsValid)
+        {
+            _logger.LogError("Invalid object sent from client.");
+            return BadRequest("Invalid object.");
+        }
+
+        var existingUser = await _userRepository.GetById(id);
+        if (existingUser == null)
+            return NotFound();
+
+        existingUser.AccountBalance = 0; // Reset account balance
+
+        // Set UpdatedAt property to current UTC time
+        existingUser.UpdatedAt = DateTime.UtcNow;
+
+        await _userRepository.Update(existingUser);
+
+        return Ok("User successfully updated.");
+    }
 
     // DELETE: api/users/{id}
     [HttpDelete("{id}")]
@@ -161,13 +190,22 @@ public class UserController : ControllerBase
             return BadRequest("Invalid object.");
         }
 
-        if (string.IsNullOrWhiteSpace(userDto.Role))
+        if (string.IsNullOrWhiteSpace(userDto.Role)) userDto.Role = "User";
+
+        // Check if email is already in use
+        var existingUser = await _userRepository.GetByEmail(userDto.Email);
+        if (existingUser != null)
         {
-            userDto.Role = "User";
+            _logger.LogError("Email is already in use.");
+            return Conflict("Email is already in use.");
         }
-        else if (userDto.Role.ToLower() == "string")
+
+        // Check if number is already in use
+        existingUser = await _userRepository.GetByPhoneNumber(userDto.PhoneNumber);
+        if (existingUser != null)
         {
-            userDto.Role = "User";
+            _logger.LogError("Phone number is already in use.");
+            return Conflict("Phone number is already in use.");
         }
 
         // Generate a salt for the password
@@ -197,8 +235,9 @@ public class UserController : ControllerBase
         user.Password = null;
 
         // Serialize both user data and authentication token
-        var responseJson = JsonConvert.SerializeObject(new { User = user, AuthResponse = authResponse }, Formatting.Indented);
-    
+        var responseJson =
+            JsonConvert.SerializeObject(new { User = user, AuthResponse = authResponse }, Formatting.Indented);
+
         return Ok(responseJson);
     }
 
@@ -217,7 +256,8 @@ public class UserController : ControllerBase
         // Create an instance of AuthResponse containing the token
         var authResponse = new AuthResponse { Token = token };
         // Serialize
-        var responseJson = JsonConvert.SerializeObject(new { User = user, AuthResponse = authResponse }, Formatting.Indented);
+        var responseJson =
+            JsonConvert.SerializeObject(new { User = user, AuthResponse = authResponse }, Formatting.Indented);
 
         return Ok(responseJson);
     }

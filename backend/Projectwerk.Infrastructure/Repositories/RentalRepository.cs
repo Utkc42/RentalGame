@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using Projectwerk.Infrastructure.Models;
-using Microsoft.EntityFrameworkCore;
 using Projectwerk.Infrastructure.Data;
+using Projectwerk.Infrastructure.Models;
 
 namespace Projectwerk.Infrastructure.Repositories;
 
@@ -11,23 +10,25 @@ public class RentalRepository
     {
         _dbContext = dbContext;
     }
+
     private readonly RetroDbContext _dbContext;
 
     public async Task<IEnumerable<Rental>> GetAll()
     {
-		return await _dbContext.Rentals
-		.Include(r => r.Game)
-		.Include(r => r.User)
-		.ToListAsync();
-	}
+        return await _dbContext.Rentals
+            .Include(r => r.Game)
+            .Include(r => r.User)
+            .ToListAsync();
+    }
 
-    public async Task<IEnumerable<Rental>> GetRentalsForUser(int userId) {
-		return await _dbContext.Rentals
-			.Include(r => r.Game)
-			.Include(r => r.User)
-			.Where(r => r.User.UserId == userId)
-			.ToListAsync();
-	}
+    public async Task<IEnumerable<Rental>> GetRentalsForUser(int userId)
+    {
+        return await _dbContext.Rentals
+            .Include(r => r.Game)
+            .Include(r => r.User)
+            .Where(r => r.User.UserId == userId)
+            .ToListAsync();
+    }
 
     public async Task<Rental> GetById(int id)
     {
@@ -57,21 +58,24 @@ public class RentalRepository
         }
     }
 
-	public async Task<(Rental?, string, string)> GetRentalWithGameAndUserByGameId(int gameId) {
-		var rentalWithGameAndUser = await _dbContext.Rentals
-			.Where(r => r.GameId == gameId)
-			.Select(r => new {
-				Rental = r,
-				GameName = r.Game.Name, // Include only the Name property of the Game entity
-				UserFirstName = r.User.FirstName, // Include only the FirstName property of the User entity
-				UserLastName = r.User.LastName // Include only the LastName property of the User entity
-			})
-			.FirstOrDefaultAsync();
+    public async Task<(Rental?, string, string)> GetRentalWithGameAndUserByGameId(int gameId)
+    {
+        var rentalWithGameAndUser = await _dbContext.Rentals
+            .Where(r => r.GameId == gameId)
+            .Select(r => new
+            {
+                Rental = r,
+                GameName = r.Game.Name, // Include only the Name property of the Game entity
+                UserFirstName = r.User.FirstName, // Include only the FirstName property of the User entity
+                UserLastName = r.User.LastName // Include only the LastName property of the User entity
+            })
+            .FirstOrDefaultAsync();
 
-		// If no rental is found, return null for all entities
-		if (rentalWithGameAndUser == null)
-			return (null, null, null);
+        // If no rental is found, return null for all entities
+        if (rentalWithGameAndUser == null)
+            return (null, null, null);
 
-		return (rentalWithGameAndUser.Rental, rentalWithGameAndUser.GameName, $"{rentalWithGameAndUser.UserFirstName} {rentalWithGameAndUser.UserLastName}");
-	}
+        return (rentalWithGameAndUser.Rental, rentalWithGameAndUser.GameName,
+            $"{rentalWithGameAndUser.UserFirstName} {rentalWithGameAndUser.UserLastName}");
+    }
 }

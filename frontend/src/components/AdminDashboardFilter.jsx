@@ -14,7 +14,7 @@ const AdminDashboardFilter = ({ onSearch }) => {
     <div className="mb-4">
       <input
         type="text"
-        placeholder="Search users..."
+        placeholder="Search..."
         value={query}
         onChange={handleInputChange}
         className="w-full p-2 border border-gray-300 rounded text-black"

@@ -5,22 +5,27 @@ const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    const storedUser = localStorage.getItem("user");
+    const storedUser = sessionStorage.getItem("user");
     return storedUser ? JSON.parse(storedUser) : null;
   });
 
   const login = (userData, token) => {
     setUser({ ...userData, token });
-    localStorage.setItem("user", JSON.stringify({ ...userData, token }));
+    sessionStorage.setItem("user", JSON.stringify({ ...userData, token }));
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem("user");
+    sessionStorage.removeItem("user");
+  };
+
+  const updateUser = (updatedUserData) => {
+    setUser(updatedUserData);
+    sessionStorage.setItem("user", JSON.stringify(updatedUserData));
   };
 
   return (
-    <UserContext.Provider value={{ user, login, logout }}>
+    <UserContext.Provider value={{ user, login, logout, updateUser }}>
       {children}
     </UserContext.Provider>
   );

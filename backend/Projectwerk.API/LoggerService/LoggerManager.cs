@@ -5,11 +5,7 @@ namespace Projectwerk.API.LoggerService;
 
 public class LoggerManager : ILoggerManager
 {
-    private static ILogger logger = LogManager.GetCurrentClassLogger();
-
-    public LoggerManager()
-    {
-    }
+    private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
     public void LogDebug(string message)
     {

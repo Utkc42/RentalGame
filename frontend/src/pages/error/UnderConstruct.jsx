@@ -1,6 +1,5 @@
-//import React from 'react';
-import { FaTools } from 'react-icons/fa';
-import { MdBuild } from 'react-icons/md';
+import { FaTools } from "react-icons/fa";
+import { MdBuild } from "react-icons/md";
 
 const UnderConstruct = () => {
   return (
@@ -12,7 +11,9 @@ const UnderConstruct = () => {
       <div className="mb-4">
         <MdBuild className="text-6xl text-darkblue animate-bounce" />
       </div>
-      <p className="text-lg text-center">This page is currently under construction. Please check back later.</p>
+      <p className="text-lg text-center">
+        This page is currently under construction. Please check back later.
+      </p>
     </div>
   );
 };

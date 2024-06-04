@@ -6,8 +6,10 @@ import winkelkarRood from "../assets/winkelkar_rood.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSignOutAlt } from "@fortawesome/free-solid-svg-icons";
 import { jwtDecode } from "jwt-decode";
+import { useNavigate } from "react-router-dom";
 
 const Header = () => {
+  const navigate = useNavigate();
   const [hovered, setHovered] = useState(false);
   const { user, logout } = useUser();
   let decodedToken;
@@ -16,8 +18,9 @@ const Header = () => {
   }
 
   const handleLogout = () => {
+    togglePop();
     logout();
-    window.location.href = "/"; // Redirect to home page after logout
+    navigate("/"); // Redirect to home after logout
   };
 
   const [seen, setSeen] = useState(false);
@@ -57,30 +60,30 @@ const Header = () => {
         <div className="flex items-center justify-center">
           <nav className="mx-auto space-x-12 px text-2xl font-retro flex flex-wrap items-center justify-center">
             {user ? (
-              <Link to="/" className="hover:text-retroLightRed">
+              <Link to="/" className="hover:text-red-700">
                 Home
               </Link>
             ) : (
-              <Link to="/" className="hover:text-retroLightRed ml-48">
+              <Link to="/" className="hover:text-red-700 ml-48">
                 Home
               </Link>
             )}
 
             {user && decodedToken.role.toLowerCase() === "admin" && (
-              <Link to="/admin/dashboard" className="hover:text-retroLightRed">
+              <Link to="/admin/dashboard" className="hover:text-red-700">
                 Dashboard
               </Link>
             )}
 
             {user && (
-              <Link to="/account" className="hover:text-retroLightRed">
+              <Link to="/account" className="hover:text-red-700">
                 Account
               </Link>
             )}
 
             <Link
               to={user ? "/shopping-cart" : "/auth"} // Redirect to auth if not logged in
-              className="hover:text-retroLightRed"
+              className="hover:text-red-700"
               style={{ color: "white" }} // Force white color
             >
               <img
@@ -97,8 +100,8 @@ const Header = () => {
               <div>
                 <Link
                   to="/auth"
-                  className="bg-gradient-to-r from-yellow-500 via-red-500 to-pink-500 hover:bg-gradient-to-r hover:from-yellow-600 hover:via-red-600 hover:to-pink-600 text-white font-retro font-bold py-2 px-4 rounded text-xl mr-3"
-                >
+                  className="bg-gradient-to-r from-darkblue to-retroblue hover:bg-gradient-to-r hover:from-red-600 hover:to-red-700 text-white font-retro font-bold py-2 px-4 rounded text-xl mr-3"
+                  >
                   Login
                 </Link>
               </div>
@@ -107,7 +110,7 @@ const Header = () => {
               <div className="absolute right-5">
                 <button
                   onClick={togglePop}
-                  className="bg-neonGreen hover:bg-green-700 text-white font-retro py-2 px-4 rounded text-sm mr-3"
+                  className="bg-green-500 hover:bg-green-700 text-white font-retro py-2 px-4 rounded text-sm mr-3"
                 >
                   {user.FirstName} {user.LastName[0]}.
                 </button>

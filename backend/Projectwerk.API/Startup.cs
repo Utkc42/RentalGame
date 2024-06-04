@@ -47,10 +47,7 @@ public class Startup
         services.ConfigureAuthentication(Configuration);
         services.AddAuthorization(options =>
         {
-            options.AddPolicy("AdminOnly", policy =>
-            {
-                policy.Requirements.Add(new AdminRequirement());
-            });
+            options.AddPolicy("AdminOnly", policy => { policy.Requirements.Add(new AdminRequirement()); });
         });
         // HTTPS
         // services.ConfigureHttpsRedirection();
@@ -79,7 +76,7 @@ public class Startup
         services.AddSingleton<IAuthorizationHandler, AdminAuthorizationHandler>();
 
         services.Configure<AppSettings>(Configuration.GetSection("AppSettings"));
-        
+
         services.AddSwaggerGen(c =>
         {
             c.SwaggerDoc("v1", new OpenApiInfo
@@ -89,11 +86,12 @@ public class Startup
             });
             c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
-                Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+                Description =
+                    "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
                 Name = "Authorization",
                 In = ParameterLocation.Header,
                 Type = SecuritySchemeType.ApiKey,
-                Scheme = "Bearer",
+                Scheme = "Bearer"
             });
             c.AddSecurityRequirement(new OpenApiSecurityRequirement
             {
@@ -107,7 +105,7 @@ public class Startup
                         },
                         Scheme = "oauth2",
                         Name = "Bearer",
-                        In = ParameterLocation.Header,
+                        In = ParameterLocation.Header
                     },
                     new List<string>()
                 }

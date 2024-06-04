@@ -12,7 +12,6 @@ const fetchUsers = async (showDeletedUsers, token) => {
         },
       }
     );
-    console.log("Users:", response);
     // sort users by name
     response.data.sort((a, b) => {
       return a.FirstName.localeCompare(b.FirstName);

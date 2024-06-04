@@ -6,14 +6,14 @@ const GameCard = ({ game }) => {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    // Navigate to the details page of the game
     navigate(`/games/${game.GameId}`);
   };
 
   return (
     <div
       className="relative p-1 bg-gray-900 rounded-lg shadow-xl border border-gray-800 cursor-pointer transform transition duration-300 hover:scale-105 flex flex-col w-full max-w-xs"
-      onClick={handleClick}>
+      onClick={handleClick}
+    >
       <div className="relative overflow-hidden flex-grow rounded-t-lg">
         <img
           src={game.CoverImage || noImage}
@@ -41,7 +41,6 @@ GameCard.propTypes = {
     CoverImage: PropTypes.string,
     ConsoleType: PropTypes.string.isRequired,
     RentalPricePerWeek: PropTypes.number.isRequired,
-    // Add other required props as needed
   }).isRequired,
 };
 

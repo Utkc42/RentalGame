@@ -1,9 +1,6 @@
-using System.Linq.Expressions;
-using Microsoft.EntityFrameworkCore;
-using Projectwerk.Infrastructure.Models;
 using Microsoft.EntityFrameworkCore;
 using Projectwerk.Infrastructure.Data;
-using Projectwerk.Domain.Interface;
+using Projectwerk.Infrastructure.Models;
 
 namespace Projectwerk.Infrastructure.Repositories;
 

@@ -16,7 +16,7 @@ const GameDetailPage = () => {
     const getGameDetail = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:5180/api/games/${id}`
+          `${import.meta.env.VITE_BACKEND_URL}/api/games/${id}`
         ); // Make Axios GET request
         setGame(response.data); // Set game data
       } catch (error) {

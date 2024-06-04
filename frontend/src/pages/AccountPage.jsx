@@ -11,39 +11,71 @@ import {
 import { useEffect, useState } from "react";
 import axios from "axios";
 import ChangeUserInfo from "../components/User/ChangeUserInfo";
-import { faPlus } from "@fortawesome/free-solid-svg-icons";
+import payLateFee from "../api/PayLateFee";
+import initiateRentalPayment from "../api/PayRental";
 
 const AccountPage = () => {
-  const { user } = useUser();
+  const { user, updateUser } = useUser();
   const [fullUser, setFullUser] = useState(user);
   const [userRentals, setUserRentals] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const labelStyle = "text-black text-sm font-semibold";
-  const valueStyle = "text-black pl-2 text-bold text-base";
-  const detailStyle = "my-3 flex items-center text-black";
+  const tableIconStyle = "pl-2 py-4";
+  const tableRowInfoStyle = "border-t border-black";
   const iconStyle = "text-black pr-2";
 
-  const handleExtendRental = async (rentalId) => {
+  const handleExtendRental = async (rental) => {
+    const paymentData = gatherPaymentData(rental);
+    await initiateRentalPayment(paymentData, user);
+    extendRental(rental);
+  };
+
+  const gatherPaymentData = (rental) => {
+    const paymentData = {
+      amountInCents: (rental.RentalPrice - rental.RentalPrice * 0.1) * 100,
+      currencyCode: "EUR",
+      description: `RetroRental Extension - user id ${user.UserId}`,
+      firstName: `${user.FirstName}`,
+      lastName: `${user.LastName}`,
+      country: "BE",
+      locale: "EN",
+      email: `${user.Email}`,
+    };
+    return paymentData;
+  };
+
+  const extendRental = async (rental) => {
     try {
-      const response = await axios.put(
-        `${import.meta.env.VITE_BACKEND_URL}/api/rentals/${rentalId}/extend`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-          },
-        }
-      );
-      console.log("Response:", response);
-      if (response.data.success) {
-        alert("Huurperiode succesvol verlengd!");
+      const extendUrl = `${import.meta.env.VITE_BACKEND_URL}/api/rentals/${
+        rental.RentalId
+      }/extend`;
+      const response = await fetch(extendUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user.token}`,
+        },
+      });
+
+      if (response.ok) {
+        const updatedRental = await response.json();
+        setUserRentals((prevRentals) =>
+          prevRentals.map((r) =>
+            r.RentalId === updatedRental.RentalId
+              ? { ...r, rental: updatedRental.EndRentalPeriod }
+              : r
+          )
+        );
+        alert("Rental period successfully extended!");
+      } else if (response.status === 400) {
+        const message = await response.text();
+        alert(message); // Display the error message from the backend
       } else {
-        alert("Kan huurperiode niet verlengen.");
+        alert("Cannot extend rental period.");
       }
     } catch (error) {
       console.error("Error extending rental:", error);
-      alert("Er is een fout opgetreden bij het verlengen van de huurperiode.");
+      alert("An error occurred while extending the rental period.");
     }
   };
 
@@ -60,7 +92,6 @@ const AccountPage = () => {
           }
         );
         setFullUser(response.data);
-        console.log("User:", response.data);
       } catch (error) {
         console.error("Error fetching user:", error);
       }
@@ -81,6 +112,10 @@ const AccountPage = () => {
             },
           }
         );
+        // sort rental by desc end date
+        response.data.sort((a, b) => {
+          return new Date(b.StartRentalPeriod) - new Date(a.StartRentalPeriod);
+        });
         setUserRentals(response.data);
         setLoading(false);
       } catch (error) {
@@ -105,105 +140,138 @@ const AccountPage = () => {
   };
 
   const handlePayFee = async () => {
-    // Implement handlePayFee logic here
+    await payLateFee(user, updateUser);
   };
 
   return (
     <div className="p-8">
-      <div className="mx-auto bg-white rounded-lg border-2 shadow-md max-w-screen-sm">
-        <div className="p-4 bg-darkblue rounded-t-lg text-white text-center">
-          <h2 className="text-2xl font-bold">Profile</h2>
+      <div className="mx-auto bg-white rounded-lg border-2 overflow-x-auto shadow-md max-w-screen-lg">
+        <div className="p-4 bg-darkGray rounded-t-lg text-white text-center">
+          <h2 className="text-xl font-bold">Account Information</h2>
         </div>
-        <div className="p-4 pt-2 text-left">
-          <div className={detailStyle}>
-            <FontAwesomeIcon icon={faUser} className={iconStyle} />
-            <span className={labelStyle}>Name:</span>
-            <span className={valueStyle}>
-              {user.FirstName} {user.LastName}
-            </span>
-          </div>
-          <div className={detailStyle}>
-            <FontAwesomeIcon icon={faEnvelope} className={iconStyle} />
-            <span className={labelStyle}>Email:</span>
-            <span className={valueStyle}> {user.Email}</span>
-          </div>
-          <div className={detailStyle}>
-            <FontAwesomeIcon icon={faPhone} className={iconStyle} />
-            <span className={labelStyle}>Phone:</span>
-            <span className={valueStyle}>
-              {formatPhoneNumber(user.PhoneNumber)}
-            </span>
-          </div>
-          <div className={detailStyle}>
-            <FontAwesomeIcon icon={faCalendarAlt} className={iconStyle} />
-            <span className={labelStyle}>Date joined:</span>
-            <span className={valueStyle}>
-              {getFormattedDate(user.CreatedAt)}
-            </span>
-          </div>
-          {fullUser.AccountBalance > 0 && (
-            <div className={detailStyle}>
-              <FontAwesomeIcon icon={faBell} className={iconStyle} />
-              <span className={labelStyle}>Late fee:</span>
-              <span className={valueStyle}>
-                € {fullUser.AccountBalance.toFixed(2)}
-              </span>
-              <button
-                className="block bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded ml-2"
-                onClick={handlePayFee}
-              >
-                Pay fee
-              </button>
-            </div>
-          )}
-          <ChangeUserInfo user={user} />
+        <div className="p-4 py-3 text-left">
+          <table className="w-full">
+            <tbody>
+              <tr>
+                <td className={tableIconStyle}>
+                  <FontAwesomeIcon icon={faUser} className={iconStyle} />
+                </td>
+                <td className="font-semibold">Name:</td>
+                <td>
+                  {user.FirstName} {user.LastName}
+                </td>
+                {/* extra empty cells for spacing purposes */}
+                <td className="px-20"></td>
+                <td className="px-20"></td>
+                <td>
+                  <ChangeUserInfo user={user} />
+                </td>
+              </tr>
+              <tr className={tableRowInfoStyle}>
+                <td className={tableIconStyle}>
+                  <FontAwesomeIcon icon={faEnvelope} className={iconStyle} />
+                </td>
+                <td className="font-semibold">Email:</td>
+                <td> {user.Email}</td>
+              </tr>
+              <tr className={tableRowInfoStyle}>
+                <td className={tableIconStyle}>
+                  <FontAwesomeIcon icon={faPhone} className={iconStyle} />
+                </td>
+                <td className="font-semibold">Phone:</td>
+                <td>{formatPhoneNumber(user.PhoneNumber)}</td>
+              </tr>
+              <tr className={tableRowInfoStyle}>
+                <td className={tableIconStyle}>
+                  <FontAwesomeIcon icon={faCalendarAlt} className={iconStyle} />
+                </td>
+                <td className="font-semibold">Date joined:</td>
+                <td>{getFormattedDate(user.CreatedAt)}</td>
+              </tr>
+              {fullUser.AccountBalance > 0 && (
+                <tr className={tableRowInfoStyle}>
+                  <td className={tableIconStyle}>
+                    <FontAwesomeIcon icon={faBell} className={iconStyle} />
+                  </td>
+                  <td className="font-semibold">Late fee:</td>
+                  <td>€ {fullUser.AccountBalance.toFixed(2)}</td>
+                  <td>
+                    <button
+                      className="block bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded ml-2"
+                      onClick={handlePayFee}
+                    >
+                      Pay fee
+                    </button>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
       {loading ? (
         <p>Loading...</p>
       ) : (
-        <div className="mt-8 overflow-x-auto shadow-md rounded-lg text-white p-4">
-          <div className="flex items-center justify-between mb-4 px-5">
-            <h2 className="text-xl font-semibold mt-3">Your Rentals</h2>
+        <div
+          className={`mx-auto mt-8 bg-darkGray overflow-x-auto max-w-screen-lg shadow-md text-white ${
+            userRentals.length === 0 ? "rounded-lg" : "border-2 rounded-lg"
+          }`}
+        >
+          <div className="mb-4 px-5 text-center">
+            <h2 className="text-xl font-bold mt-3">Your Rentals</h2>
           </div>
           {userRentals.length === 0 ? (
-            <p>No rentals found.</p>
+            <p className="mb-3">No rentals found.</p>
           ) : (
-            <table className="w-full">
-              <thead className="text-xs uppercase bg-gray-700">
+            <table className="w-full text-black">
+              <thead className="text-xs uppercase bg-gray-300">
                 <tr>
                   <th className="px-6 py-3">Game</th>
                   <th className="px-6 py-3">Start Date</th>
                   <th className="px-6 py-3">End Date</th>
+                  <th className="px-6 py-3">Extensions Left</th>
                   <th className="px-6 py-3"></th>
                 </tr>
               </thead>
               <tbody>
-                {userRentals.map((rental) => (
-                  <tr
-                    key={rental.id}
-                    className="border-b h-10 bg-gray-800 border-gray-700 hover:bg-gray-700"
-                  >
-                    <td className="px-6 py-4">{rental.GameName}</td>
-                    <td className="px-6 py-4">
-                      {getFormattedDate(rental.StartRentalPeriod)}
-                    </td>
-                    <td className="px-6 py-4">
-                      {getFormattedDate(rental.EndRentalPeriod)}
-                    </td>
-                    <td>
-                      {!rental.IsDeleted && (
+                {userRentals.map((rental) => {
+                  var canExtend =
+                    rental.EndRentalPeriod > getFormattedDate(new Date()) &&
+                    rental.NumberOfExtensions < 2;
+                  return (
+                    <tr
+                      key={rental.id}
+                      className="border-t h-10 bg-gray-100 border-gray-500 hover:bg-gray-300"
+                    >
+                      <td className="px-6 py-4">{rental.GameName}</td>
+                      <td className="px-6 py-4">
+                        {getFormattedDate(rental.StartRentalPeriod)}
+                      </td>
+                      <td className="px-6 py-4">
+                        {getFormattedDate(rental.EndRentalPeriod)}
+                      </td>
+                      <td
+                        className={`px-6 py-4 ${
+                          canExtend ? "" : "text-red-500"
+                        }`}
+                      >
+                        {canExtend
+                          ? (2 - rental.NumberOfExtensions).toString()
+                          : "None"}
+                      </td>
+                      <td>
                         <button
-                          className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded ml-2"
-                          onClick={() => handleExtendRental(rental.id)}
+                          className={`bg-green-500 hover:bg-green-700 font-bold py-1 px-3 rounded ml-2 text-white ${
+                            !rental.IsDeleted && canExtend ? "" : "hidden"
+                          }`}
+                          onClick={() => handleExtendRental(rental)}
                         >
-                          <FontAwesomeIcon icon={faPlus} className="mr-1" />
                           Extend Rental
                         </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}

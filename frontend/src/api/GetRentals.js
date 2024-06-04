@@ -12,7 +12,6 @@ const fetchRentals = async (showReturnedGames, token) => {
         },
       }
     );
-    console.log("Rentals:", response);
     // sort rentals by desc end date
     response.data.sort((a, b) => {
       // Compare IsDeleted first

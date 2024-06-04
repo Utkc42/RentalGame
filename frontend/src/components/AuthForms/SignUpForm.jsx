@@ -6,14 +6,17 @@ import axios from "axios";
 const SignUpForm = ({ toggleForm }) => {
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("+32");
+  const [phoneNumberError, setPhoneNumberError] = useState("");
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
-    phoneNumber: "+32",
     Role: "User",
   });
+  const [error, setError] = useState("");
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -22,8 +25,15 @@ const SignUpForm = ({ toggleForm }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const error = validatePassword(password);
-    setPasswordError(error);
+    const passwordError = validatePassword(password);
+    setPasswordError(passwordError);
+
+    const phoneNumberError = validatePhoneNumber(phoneNumber);
+    setPhoneNumberError(phoneNumberError);
+
+    if (phoneNumberError || passwordError) {
+      return;
+    }
 
     try {
       await axios.post(
@@ -31,7 +41,7 @@ const SignUpForm = ({ toggleForm }) => {
         {
           ...formData,
           password,
-          phoneNumber: formData.phoneNumber.replace(" ", ""),
+          phoneNumber,
         },
         {
           headers: {
@@ -39,17 +49,35 @@ const SignUpForm = ({ toggleForm }) => {
           },
         }
       );
-      console.log("User registered successfully!");
-      navigate("/auth");
-      toggleForm();
+      setShowSuccessMessage(true);
+      setTimeout(() => {
+        setShowSuccessMessage(false);
+        navigate("/auth");
+        toggleForm();
+      }, 2000);
     } catch (error) {
-      console.error("Error registering user:", error);
+      // Extract error message from response and set it to error state
+      if (error.response && error.response.status === 409) {
+        setError(error.response.data); // Assuming the error message is in error.response.data
+      } else {
+        setError("An error occurred during registration. Please try again.");
+      }
     }
   };
 
   const validatePassword = (password) => {
     if (password.length < 6) {
       return "Password must be at least 6 characters long";
+    } else {
+      return "";
+    }
+  };
+
+  const validatePhoneNumber = (phoneNumber) => {
+    setPhoneNumber(phoneNumber.replace(" ", ""));
+    const phoneNumberRegex = /^\+32\d{9}$/;
+    if (!phoneNumberRegex.test(phoneNumber)) {
+      return "Phone number must be in the format +32XXXXXXXXX";
     } else {
       return "";
     }
@@ -62,8 +90,23 @@ const SignUpForm = ({ toggleForm }) => {
     setPasswordError(error);
   };
 
+  const handlePhoneNumberChange = (e) => {
+    const { value } = e.target;
+    setPhoneNumber(value);
+  };
+
+  const handlePhoneNumberBlur = () => {
+    const error = validatePhoneNumber(phoneNumber);
+    setPhoneNumberError(error);
+  };
+
   return (
     <div className="flex flex-col items-center">
+      {showSuccessMessage && (
+        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 bg-green-500 text-white py-2 px-4 rounded-lg text-sm mt-4 z-50">
+          User registered successfully!
+        </div>
+      )}
       <form
         onSubmit={handleSubmit}
         className="w-full flex flex-col gap-4 justify-center"
@@ -73,10 +116,10 @@ const SignUpForm = ({ toggleForm }) => {
         </h2>
         <div>
           <label
-            className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+            className="block uppercase text-left tracking-wide text-gray-700 text-xs font-bold mb-2"
             htmlFor="firstName"
           >
-            First Name:
+            First Name
           </label>
           <input
             className="appearance-none block w-full bg-gray-100 border border-gray-300 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-blue-500 mb-4"
@@ -90,10 +133,10 @@ const SignUpForm = ({ toggleForm }) => {
         </div>
         <div>
           <label
-            className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+            className="block uppercase text-left tracking-wide text-gray-700 text-xs font-bold mb-2"
             htmlFor="lastName"
           >
-            Last Name:
+            Last Name
           </label>
           <input
             className="appearance-none block w-full bg-gray-100 border border-gray-300 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-blue-500 mb-4"
@@ -107,10 +150,10 @@ const SignUpForm = ({ toggleForm }) => {
         </div>
         <div>
           <label
-            className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+            className="block uppercase text-left tracking-wide text-gray-700 text-xs font-bold mb-2"
             htmlFor="email"
           >
-            Email:
+            Email
           </label>
           <input
             className="appearance-none block w-full bg-gray-100 border border-gray-300 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-blue-500 mb-4"
@@ -124,10 +167,10 @@ const SignUpForm = ({ toggleForm }) => {
         </div>
         <div>
           <label
-            className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+            className="block uppercase text-left tracking-wide text-gray-700 text-xs font-bold mb-2"
             htmlFor="password"
           >
-            Password:
+            Password
           </label>
           <input
             className="appearance-none block w-full bg-gray-100 border border-gray-300 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-blue-500 mb-4"
@@ -145,26 +188,31 @@ const SignUpForm = ({ toggleForm }) => {
         </div>
         <div>
           <label
-            className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+            className="block uppercase text-left tracking-wide text-gray-700 text-xs font-bold mb-2"
             htmlFor="phoneNumber"
           >
-            Phone Number:
+            Phone Number
           </label>
           <input
             className="appearance-none block w-full bg-gray-100 border border-gray-300 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-blue-500 mb-4"
             type="tel"
             name="phoneNumber"
             placeholder="+32 XXX XXX XXX"
-            value={formData.phoneNumber}
-            onChange={handleInputChange}
+            value={phoneNumber}
+            onChange={handlePhoneNumberChange}
+            onBlur={handlePhoneNumberBlur}
             maxLength={13}
             required
           />
+          {phoneNumberError && (
+            <p className="text-red-400 mb-3">{phoneNumberError}</p>
+          )}
         </div>
+        {error && <div className="text-red-500 text-sm mb-4">{error}</div>}
         <input
           type="submit"
           value="Register"
-          className="block w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mb-4"
+          className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mb-4"
         />
         <button
           type="button"

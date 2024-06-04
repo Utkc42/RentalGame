@@ -48,7 +48,8 @@ const UserRentals = ({ user, showReturnedGames }) => {
         {rentals.map((rental) => (
           <li
             key={rental.RentalId}
-            className="my-2 p-2 bg-gray-700 rounded-lg flex items-center">
+            className="my-2 p-2 bg-gray-700 rounded-lg flex items-center"
+          >
             <FontAwesomeIcon icon={faGamepad} className="text-white pr-2" />
             <span className="text-white">{rental.GameName}</span>
           </li>

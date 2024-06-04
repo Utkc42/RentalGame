@@ -1,13 +1,15 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useCart } from "../context/CartContext";
 import { useUser } from "../context/UserContext";
 import noImage from "../assets/no_image_available.svg";
 import { getFormattedDate, getFutureDate } from "../utils/helpers";
+import payLateFee from "../api/PayLateFee";
+import initiateRentalPayment from "../api/PayRental";
 
 const ShoppingCart = () => {
   const { cartItems, setCartItems } = useCart();
-  const itemRefs = useRef([]);
-  const { user } = useUser();
+  const [lateFee, setLateFee] = useState(0);
+  const { user, updateUser } = useUser();
   const [isEmpty, setIsEmpty] = useState(true);
 
   useEffect(() => {
@@ -27,6 +29,12 @@ const ShoppingCart = () => {
     localStorage.setItem(`cartItems-${user.UserId}`, JSON.stringify(cartItems));
     setIsEmpty(cartItems.length === 0);
   }, [cartItems, user.UserId]);
+
+  useEffect(() => {
+    if (user) {
+      setLateFee(user.AccountBalance);
+    }
+  }, [user]);
 
   const handleRemoveItem = (gameId) => {
     const shouldRemove = window.confirm(
@@ -58,9 +66,15 @@ const ShoppingCart = () => {
       .toFixed(2);
   };
 
-  const handleCheckOutClick = () => {
+  const handleCheckOutClick = async () => {
     const paymentData = gatherPaymentData();
-    initiatePayment(paymentData);
+    await initiateRentalPayment(paymentData, user);
+    await sendRentalData();
+    setCartItems([]);
+  };
+
+  const handlePayFee = async () => {
+    await payLateFee(user, updateUser);
   };
 
   const gatherPaymentData = () => {
@@ -68,54 +82,14 @@ const ShoppingCart = () => {
     const paymentData = {
       amountInCents: calculateTotalPrice() * 100,
       currencyCode: "EUR",
-      description: `RetroRental Order - user id ${user.UserId}`,
+      description: `RetroRental Rental - user id ${user.UserId}`,
       firstName: `${user.FirstName}`,
       lastName: `${user.LastName}`,
       country: "BE",
       locale: "EN",
       email: `${user.Email}`,
     };
-    console.log("Payment data:", JSON.stringify(paymentData));
     return paymentData;
-  };
-
-  const initiatePayment = async (paymentData) => {
-    try {
-      // Send the payment request to the backend
-      const paymentUrl = `${
-        import.meta.env.VITE_BACKEND_URL
-      }/api/payments/process`;
-      const response = await fetch(paymentUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${user.token}`,
-        },
-        body: JSON.stringify(paymentData),
-      });
-
-      console.log("Response:", response);
-
-      // Check if the request was successful
-      if (response.ok) {
-        // Payment request was successful, handle the response
-        const responseData = await response.json();
-        // Redirect the user to the payment URL
-        window.location.href = responseData.paymentUrl;
-        sendRentalData();
-        setCartItems([]);
-      } else {
-        // Payment request failed, handle the error
-        console.error("Payment failed:", response.statusText);
-        // Display an error message to the user
-        alert("Payment failed. Please try again later.");
-      }
-    } catch (error) {
-      // An error occurred while sending the payment request
-      console.error("An error occurred:", error);
-      // Display an error message to the user
-      alert("An error occurred. Please try again later.");
-    }
   };
 
   const sendRentalData = async () => {
@@ -132,129 +106,129 @@ const ShoppingCart = () => {
           isDeleted: false,
         };
 
-        console.log("Request body:", requestBody);
-
         // Make an HTTP POST request to your backend for each game
-        const response = await fetch(
-          `${import.meta.env.VITE_BACKEND_URL}/api/rentals`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${user.token}`,
-            },
-            body: JSON.stringify(requestBody), // Convert the body object to JSON
-          }
-        );
-
-        // Log the response status
-        console.log("Response status:", response.status);
-
-        // Log the response body
-        const responseBody = await response.text();
-        console.log("Response body:", responseBody);
-
-        if (response.ok) {
-          // Payment successful for this game
-          console.log(`Payment successful for game ID ${game.GameId}`);
-        } else {
-          // Payment failed for this game, handle error
-          console.error(`Payment failed for game ID ${game.GameId}`);
-        }
+        await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/rentals`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user.token}`,
+          },
+          body: JSON.stringify(requestBody), // Convert the body object to JSON
+        });
       });
     } catch (error) {
       console.error("An error occurred:", error);
-      // Handle error
     }
   };
 
   return (
     <div className="min-h-screen p-8">
       <div className="bg-gray-800 px-2 max-w-2xl mx-auto text-white rounded-lg shadow overflow-hidden">
-        {cartItems.map((item) => (
-          <div
-            key={item.GameId}
-            ref={(element) => (itemRefs.current[item.GameId] = element)}
-            className="flex items-center justify-between p-4 border-b border-gray-200"
-          >
-            <div className="flex items-center">
-              <img
-                src={item.CoverImage || noImage}
-                alt={item.Name}
-                className="w-20 h-20 object-contain rounded mr-4"
-              />
-              <div>
-                <p className="text-lg">{item.Name}</p>
+        <h2 className="text-center text-2xl font-bold p-4">Your Cart</h2>
+        {isEmpty ? (
+          <p className="pb-4">
+            Your cart is currently empty. Add games to proceed with the
+            checkout.
+          </p>
+        ) : (
+          <div>
+            <table className="w-full">
+              <tbody>
+                {cartItems.map((item) => (
+                  <tr key={item.GameId}>
+                    <td className="px-4 py-2 flex items-center">
+                      <img
+                        src={item.CoverImage || noImage}
+                        alt={item.Name}
+                        className="w-12 h-12 object-contain rounded mr-4"
+                      />
+                      <p>{item.Name}</p>
+                    </td>
+                    <td className="px-4 py-2">{item.quantity}</td>
+                    <td className="px-4 py-2">
+                      € {(item.RentalPricePerWeek * item.quantity).toFixed(2)}
+                    </td>
+                    <td className="px-4 py-2 text-right">
+                      <button
+                        onClick={() => handleRemoveItem(item.GameId)}
+                        className="text-red-500"
+                        aria-label={`Remove ${item.Name} from cart`}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-6 w-6"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <hr className="text-white mx-4" />
+            <div className="p-4">
+              <p className="text-lg text-right">
+                Total: € {calculateTotalPrice()}
+              </p>
+              <div className="flex justify-end pt-4 pb-2">
+                <button
+                  onClick={() => handleClearCart()}
+                  className="bg-red-500 text-white hover:bg-red-700 font-bold py-2 px-4 rounded mr-4"
+                  aria-label="Clear cart"
+                >
+                  Clear Cart
+                </button>
+                {!user && (
+                  <button
+                    className="bg-green-500 text-white hover:bg-green-700 font-bold py-2 px-4 rounded opacity-50 cursor-not-allowed"
+                    disabled
+                    aria-label="Please log in to proceed with checkout"
+                  >
+                    Check-Out
+                  </button>
+                )}
+                {user && (
+                  <button
+                    onClick={handleCheckOutClick}
+                    className={`bg-green-500 text-white hover:bg-green-700 font-bold py-2 px-4 rounded ${
+                      lateFee !== 0
+                        ? "cursor-not-allowed opacity-50"
+                        : "cursor-pointer"
+                    }`}
+                    disabled={lateFee !== 0}
+                    aria-label="Proceed with checkout"
+                  >
+                    Check-Out
+                  </button>
+                )}
               </div>
-            </div>{" "}
-            <p className="mr-2">Quantity: {item.quantity}</p>
-            <p>€ {(item.RentalPricePerWeek * item.quantity).toFixed(2)}</p>
-            <div className="flex items-center">
-              <button
-                onClick={() => handleRemoveItem(item.GameId)}
-                className="text-red-500"
-                aria-label={`Remove ${item.Name} from cart`}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-        ))}
-        {isEmpty && (
-          <div className="text-center py-4">
-            <p>
-              Your shopping cart is empty. Add items to proceed with checkout.
-            </p>
-          </div>
-        )}
-        {!isEmpty && (
-          <div className="p-4">
-            <p className="text-lg text-right">
-              Total: €{calculateTotalPrice()}
-            </p>
-            <div className="flex justify-end">
-              <button
-                onClick={() => handleClearCart()}
-                className="bg-red-500 text-white hover:bg-red-700 font-bold py-2 px-4 rounded mr-4"
-                aria-label="Clear cart"
-              >
-                Clear Cart
-              </button>
-              {!user && (
-                <button
-                  className="bg-green-500 text-white hover:bg-green-700 font-bold py-2 px-4 rounded opacity-50 cursor-not-allowed"
-                  disabled
-                  aria-label="Please log in to proceed with checkout"
-                >
-                  Check-Out
-                </button>
-              )}
-              {user && (
-                <button
-                  onClick={handleCheckOutClick}
-                  className="bg-green-500 text-white hover:bg-green-700 font-bold py-2 px-4 rounded"
-                  aria-label="Proceed with checkout"
-                >
-                  Check-Out
-                </button>
-              )}
             </div>
           </div>
         )}
       </div>
+      {user && lateFee !== 0 && (
+        <div className="text-center mt-4">
+          <p className="text-red-500 mb-4">
+            You have a late fee of € {lateFee.toFixed(2)}. You need to pay this
+            fee before you can rent new games.
+          </p>
+          <button
+            className="bg-green-500 text-white hover:bg-green-700 font-bold py-2 px-4 rounded"
+            onClick={handlePayFee}
+          >
+            Pay Fee
+          </button>
+        </div>
+      )}
     </div>
   );
 };
